@@ -1,6 +1,6 @@
 
-import { ThemedView } from '@/components/themed-view';
-import { IconSymbol } from '@/components/ui/icon-symbol';
+import { ThemedView } from '../../components/themed-view';
+import { IconSymbol } from '../../components/ui/icon-symbol';
 import React, { useState } from 'react';
 import { ActivityIndicator, TextInput, TouchableOpacity, View } from 'react-native';
 import Animated, { SlideInRight, SlideOutLeft } from 'react-native-reanimated';

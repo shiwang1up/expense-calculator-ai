@@ -28,7 +28,8 @@ export const CATEGORY_CONFIG: Record<string, { name: string; emoji: string }> =
   };
 
 // Use special IP for Android Emulator loopback to localhost
-const API_URL = "http://10.0.2.2:3000/api/expenses";
+// const API_URL = "http://10.0.2.2:3000/api/expenses";
+const API_URL = "https://expense-calculator-ai.vercel.app/api/expenses";
 
 const getCategoryConfig = (backendCategory: string) => {
   const normalized = backendCategory.toUpperCase();

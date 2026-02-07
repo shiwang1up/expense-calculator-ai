@@ -12,7 +12,18 @@ const app = express();
 const port = process.env.PORT || 3000;
 
 // Connect to MongoDB
-connectDB();
+// connectDB(); // Removed top-level await for Vercel
+
+// Middleware
+app.use(async (req, res, next) => {
+    try {
+        await connectDB();
+        next();
+    } catch (error) {
+        console.error('Database connection failed:', error);
+        res.status(500).json({ error: 'Database connection failed' });
+    }
+});
 
 // Middleware
 app.use(cors());
