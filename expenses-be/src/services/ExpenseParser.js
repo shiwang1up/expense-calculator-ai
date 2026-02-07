@@ -21,15 +21,22 @@ class ExpenseParser {
                             "amount": Number,
                             "currency": String (default "INR"),
                             "category": String (e.g., "Food & Dining", "Transport", "Entertainment", "Groceries", "Utilities", "Health", "Shopping", "General"),
-                            "description": String (brief description),
-                            "merchant": String (extract merchant name efficiently, default "Unknown")
+                            "description": String (brief description of WHAT was paid for),
+                            "merchant": String (WHO was paid. Infer from context if not explicit. Avoid "Unknown" if possible.)
                         }
+                        
+                        Rules:
+                        1. Merchant and Description should be co-related.
+                        2. If input is "lunch at taj", Merchant="Taj", Description="Lunch".
+                        3. If input is "uber to office", Merchant="Uber", Description="Ride to office".
+                        4. If input is "paid 500 for groceries", infer Merchant based on common sense if possible, or use "Local Store" / "General Store" instead of "Unknown" if it fits context.
+                        5. Prioritize extracting a specific Merchant name.
                         
                         Example Input: "spent 500 on lunch at subway"
                         Example Output: {"amount": 500, "currency": "INR", "category": "Food & Dining", "description": "Lunch", "merchant": "Subway"}
                         
-                        Example Input: "uber 350 to office"
-                        Example Output: {"amount": 350, "currency": "INR", "category": "Transport", "description": "Ride to office", "merchant": "Uber"}`
+                        Example Input: "medicines 500"
+                        Example Output: {"amount": 500, "currency": "INR", "category": "Health", "description": "Medicines", "merchant": "Pharmacy"}`
                     },
                     {
                         role: "user",
@@ -98,8 +105,11 @@ class ExpenseParser {
                                 content: `You are an expert at identifying merchant names from payment descriptions.
                                 Input: "${data.description}" (Original: "${input}")
                                 Task: Identify the most likely merchant name.
-                                Output: Return ONLY the merchant name as a JSON string. If absolutely unknown, return "Unknown".
-                                Example Output: "Uber" or "Starbucks" or "Dr. Smith's Clinic"`
+                                Rules:
+                                1. Infer the merchant from the activity if possible (e.g., "Dental visit" -> "Dental Clinic", "Vegetables" -> "Vegetable Vendor").
+                                2. Avoid "Unknown". Make a best guess based on the category/description.
+                                3. Output ONLY the merchant name string.
+                                Example Output: "Uber", "Starbucks", "Pharmacy", "Local Vendor"`
                             },
                             {
                                 role: "user",
