@@ -1,0 +1,21 @@
+### Add Expense 1
+POST http://localhost:3000/api/expenses
+Content-Type: application/json
+
+{
+  "input": "Spent 850 on lunch at Taj Hotel"
+}
+
+### Add Expense 2
+POST http://localhost:3000/api/expenses
+Content-Type: application/json
+
+{
+  "input": "uber to airport 450"
+}
+
+### Get All Expenses
+GET http://localhost:3000/api/expenses
+
+### Delete Expense
+DELETE http://localhost:3000/api/expenses/1
