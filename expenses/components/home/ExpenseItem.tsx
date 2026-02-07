@@ -1,8 +1,8 @@
-import { ThemedText } from '@/components/themed-text';
-import { IconSymbol } from '@/components/ui/icon-symbol';
-import { Expense } from '@/services/ExpenseService';
+import { ThemedText } from '../../components/themed-text';
+import { IconSymbol } from '../../components/ui/icon-symbol';
+import { Expense } from '../../services/ExpenseService';
 import React, { useState } from 'react';
-import { ActivityIndicator, Alert, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Alert, Animated, TouchableOpacity, View } from 'react-native';
 import { Swipeable } from 'react-native-gesture-handler';
 import { StyleSheet } from 'react-native-unistyles';
 
@@ -20,6 +20,8 @@ const formatRelativeTime = (date: Date) => {
     if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`;
     return new Date(date).toLocaleDateString();
 };
+
+const AnimatedTouchableOpacity = Animated.createAnimatedComponent(TouchableOpacity);
 
 export const ExpenseItem = ({ expense, onDelete }: ExpenseItemProps) => {
     const [isDeleting, setIsDeleting] = useState(false);
@@ -41,7 +43,7 @@ export const ExpenseItem = ({ expense, onDelete }: ExpenseItemProps) => {
                             setIsDeleting(true);
                             try {
                                 await onDelete(expense.id);
-                            } catch (error) {
+                            } catch {
                                 Alert.alert('Error', 'Failed to delete expense');
                                 setIsDeleting(false);
                             }
@@ -52,26 +54,31 @@ export const ExpenseItem = ({ expense, onDelete }: ExpenseItemProps) => {
         );
     };
 
-    const renderRightActions = () => {
+    const renderRightActions = (
+        progress: Animated.AnimatedInterpolation<number>,
+        dragX: Animated.AnimatedInterpolation<number>
+    ) => {
+        const translateX = dragX.interpolate({
+            inputRange: [-100, 0],
+            outputRange: [0, 100],
+            extrapolate: 'clamp',
+        });
+
         return (
-            <TouchableOpacity onPress={handleDelete} style={styles.deleteAction}>
+            <AnimatedTouchableOpacity onPress={handleDelete} style={[styles.deleteAction, { transform: [{ translateX }] }]}>
                 <View style={styles.deleteActionContent}>
                     <IconSymbol name="trash" size={24} color="white" />
                     <ThemedText style={styles.deleteText}>Delete</ThemedText>
                 </View>
-            </TouchableOpacity>
+            </AnimatedTouchableOpacity>
         );
     };
-
-    // Extract emoji from category string if present (e.g. "🍔 Food")
-    const emojiMatches = expense.category.match(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/);
-    const emoji = emojiMatches ? emojiMatches[0] : '📦';
 
     return (
         <Swipeable renderRightActions={renderRightActions}>
             <View style={styles.container}>
                 <View style={styles.iconContainer}>
-                    <ThemedText style={styles.emoji}>{emoji}</ThemedText>
+                    <ThemedText style={styles.emoji}>{expense.emoji}</ThemedText>
                 </View>
                 <View style={styles.content}>
                     <View style={styles.topRow}>
@@ -79,7 +86,7 @@ export const ExpenseItem = ({ expense, onDelete }: ExpenseItemProps) => {
                         <ThemedText style={styles.amount}>₹{expense.amount}</ThemedText>
                     </View>
                     <ThemedText style={styles.description} numberOfLines={1}>
-                        {expense.description || expense.title}
+                        {expense.merchant ? `${expense.merchant} • ` : ''}{expense.description || expense.title}
                     </ThemedText>
                     <ThemedText style={styles.time}>{formatRelativeTime(expense.date)}</ThemedText>
                 </View>
@@ -98,8 +105,11 @@ const styles = StyleSheet.create((theme) => ({
         flexDirection: 'row',
         alignItems: 'center',
         paddingVertical: theme.gap(1.5),
-        paddingHorizontal: theme.gap(2),
         backgroundColor: theme.colors.card,
+        borderRadius: 10,
+        borderRightWidth: 2,
+        borderRightColor: theme.colors.foreground,
+        paddingHorizontal: theme.gap(1.5),
     },
     iconContainer: {
         width: 40,
@@ -150,18 +160,20 @@ const styles = StyleSheet.create((theme) => ({
         justifyContent: 'center',
         alignItems: 'flex-end',
         width: 100,
+        borderRadius: 20
     },
     deleteActionContent: {
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        width: 80, // Center within the width
+        width: "100%", // Center within the width
     },
     deleteText: {
         color: 'white',
         fontSize: 12,
         fontWeight: '600',
         marginTop: 4,
+        textAlign: 'center',
     },
     loadingOverlay: {
         ...StyleSheet.absoluteFillObject,

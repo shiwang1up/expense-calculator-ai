@@ -1,7 +1,6 @@
-
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Expense } from '@/services/ExpenseService';
+import { ThemedText } from '../../components/themed-text';
+import { ThemedView } from '../../components/themed-view';
+import { Expense } from '../../services/ExpenseService';
 import React, { useEffect } from 'react';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
@@ -27,7 +26,7 @@ export const SuccessFeedback = ({ expense, onDismiss }: SuccessFeedbackProps) =>
             </ThemedView>
             <ThemedView style={styles.content}>
                 <ThemedText style={styles.amount}>₹{expense.amount}</ThemedText>
-                <ThemedText style={styles.detail}>{expense.category}</ThemedText>
+                <ThemedText style={styles.detail}>{expense.emoji} {expense.category}</ThemedText>
                 {expense.merchant && (
                     <ThemedText style={styles.subDetail}>at {expense.merchant}</ThemedText>
                 )}

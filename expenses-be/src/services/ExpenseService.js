@@ -4,20 +4,20 @@ class ExpenseService {
         this.expenseParser = expenseParser;
     }
 
-    createExpense(input) {
-        const parsedData = this.expenseParser.parse(input);
+    async createExpense(input) {
+        const parsedData = await this.expenseParser.parse(input);
         if (!parsedData) {
-            throw new Error("Could not parse expense. Please include an amount.");
+            throw new Error("Could not parse expense. Please provide clear details like amount and merchant.");
         }
-        return this.expenseRepository.add(parsedData);
+        return await this.expenseRepository.add(parsedData);
     }
 
-    getAllExpenses() {
-        return this.expenseRepository.findAll();
+    async getAllExpenses() {
+        return await this.expenseRepository.findAll();
     }
 
-    deleteExpense(id) {
-        return this.expenseRepository.deleteById(id);
+    async deleteExpense(id) {
+        return await this.expenseRepository.deleteById(id);
     }
 }
 

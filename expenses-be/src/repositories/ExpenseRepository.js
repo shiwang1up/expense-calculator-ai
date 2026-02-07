@@ -1,30 +1,17 @@
+const Expense = require('../models/Expense');
+
 class ExpenseRepository {
-    constructor() {
-        this.expenses = [];
-        this.nextId = 1;
+    async add(expenseData) {
+        const expense = new Expense(expenseData);
+        return await expense.save();
     }
 
-    add(expense) {
-        const newExpense = {
-            id: this.nextId++,
-            ...expense,
-            created_at: new Date().toISOString()
-        };
-        this.expenses.push(newExpense);
-        return newExpense;
+    async findAll() {
+        return await Expense.find().sort({ created_at: -1 });
     }
 
-    findAll() {
-        return [...this.expenses].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-    }
-
-    deleteById(id) {
-        const index = this.expenses.findIndex(e => e.id === id);
-        if (index === -1) {
-            return false;
-        }
-        this.expenses.splice(index, 1);
-        return true;
+    async deleteById(id) {
+        return await Expense.findByIdAndDelete(id);
     }
 }
 
