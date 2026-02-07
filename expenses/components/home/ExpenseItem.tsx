@@ -21,6 +21,17 @@ const formatRelativeTime = (date: Date) => {
     return new Date(date).toLocaleDateString();
 };
 
+const getCurrencySymbol = (currency: string) => {
+    switch (currency.toUpperCase()) {
+        case 'USD': return '$';
+        case 'EUR': return '€';
+        case 'GBP': return '£';
+        case 'JPY': return '¥';
+        case 'INR': return '₹';
+        default: return currency;
+    }
+};
+
 const AnimatedTouchableOpacity = Animated.createAnimatedComponent(TouchableOpacity);
 
 export const ExpenseItem = ({ expense, onDelete }: ExpenseItemProps) => {
@@ -83,7 +94,7 @@ export const ExpenseItem = ({ expense, onDelete }: ExpenseItemProps) => {
                 <View style={styles.content}>
                     <View style={styles.topRow}>
                         <ThemedText style={styles.category} numberOfLines={1}>{expense.category}</ThemedText>
-                        <ThemedText style={styles.amount}>₹{expense.amount}</ThemedText>
+                        <ThemedText style={styles.amount}>{getCurrencySymbol(expense.currency || 'INR')}{expense.amount}</ThemedText>
                     </View>
                     <ThemedText style={styles.description} numberOfLines={1}>
                         {expense.merchant ? `${expense.merchant} • ` : ''}{expense.description || expense.title}

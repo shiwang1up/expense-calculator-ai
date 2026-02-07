@@ -1,5 +1,6 @@
 const BASE_URL = 'http://localhost:3000/api/expenses';
 
+// NOTE: This script requires Node.js v18+ for built-in fetch support.
 async function runTests() {
     console.log('Starting Backend Verification...');
 

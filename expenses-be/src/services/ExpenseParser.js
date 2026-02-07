@@ -51,8 +51,41 @@ class ExpenseParser {
             const data = JSON.parse(jsonStr);
             data.original_input = input;
 
-            // Validate essential fields
-            if (!data.amount) throw new Error("Amount not found");
+            // Validate and normalize essential fields
+            const parsedAmount = Number(data.amount);
+            if (!Number.isFinite(parsedAmount) || parsedAmount <= 0) {
+                console.warn("ExpenseParser: Invalid or missing amount in parsed data", {
+                    input,
+                    rawAmount: data.amount,
+                });
+                return null;
+            }
+            data.amount = parsedAmount;
+
+            if (typeof data.description !== "string" || !data.description.trim()) {
+                console.warn("ExpenseParser: Missing or empty description in parsed data", {
+                    input,
+                    description: data.description,
+                });
+                // Instead of failing, try to use input as description if short enough, or just generic
+                // But for now, let's strictly require it or return null as per plan, 
+                // OR we can default it to "Expense" if missing. 
+                // Plan said: "Validate description is a non-empty string." and "Return null if validation fails".
+                return null;
+            }
+            data.description = data.description.trim();
+
+            if (typeof data.currency === "string" && data.currency.trim()) {
+                data.currency = data.currency.trim().toUpperCase();
+            } else {
+                data.currency = "INR";
+            }
+
+            if (typeof data.category === "string" && data.category.trim()) {
+                data.category = data.category.trim();
+            } else {
+                data.category = "General";
+            }
 
             // Refine Merchant if Unknown
             if (!data.merchant || data.merchant.toLowerCase() === 'unknown') {

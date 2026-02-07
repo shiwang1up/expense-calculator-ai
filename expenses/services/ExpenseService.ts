@@ -2,6 +2,7 @@ export interface Expense {
   id: string;
   title: string;
   amount: number;
+  currency?: string; // Currency code e.g. "USD", "INR"
   date: Date;
   category: string; // Plain name e.g. "Food & Dining"
   emoji: string; // Emoji e.g. "🍔"
@@ -62,6 +63,7 @@ export const ExpenseService = {
           id: e._id,
           title: e.description || e.original_input,
           amount: e.amount,
+          currency: e.currency,
           date: new Date(e.created_at),
           category: config.name,
           emoji: config.emoji,
@@ -120,6 +122,7 @@ export const ExpenseService = {
         id: e._id,
         title: e.description || e.original_input,
         amount: e.amount,
+        currency: e.currency,
         date: new Date(e.created_at),
         category: config.name,
         emoji: config.emoji,
