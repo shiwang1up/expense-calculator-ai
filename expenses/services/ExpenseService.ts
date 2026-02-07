@@ -1,11 +1,13 @@
 export interface Expense {
   id: string;
-  title: string; // The original input text or short summary
+  title: string;
   amount: number;
+  currency?: string; // Currency code e.g. "USD", "INR"
   date: Date;
-  category: string; // Emoji + Name e.g. "🍔 Food & Dining"
-  description?: string; // Parsed description
-  merchant?: string; // Parsed merchant
+  category: string; // Plain name e.g. "Food & Dining"
+  emoji: string; // Emoji e.g. "🍔"
+  description?: string;
+  merchant?: string;
 }
 
 export interface ExpenseGroup {
@@ -13,110 +15,140 @@ export interface ExpenseGroup {
   data: Expense[];
 }
 
-export const CATEGORIES = {
-  FOOD: "🍔 Food & Dining",
-  TRANSPORT: "🚗 Transport",
-  SHOPPING: "🛒 Shopping",
-  ENTERTAINMENT: "📺 Entertainment",
-  BILLS: "📄 Bills & Utilities",
-  HEALTH: "💊 Health",
-  TRAVEL: "✈️ Travel",
-  OTHER: "📦 Other",
+export const CATEGORY_CONFIG: Record<string, { name: string; emoji: string }> =
+  {
+    FOOD: { name: "Food & Dining", emoji: "🍔" },
+    TRANSPORT: { name: "Transport", emoji: "🚗" },
+    SHOPPING: { name: "Shopping", emoji: "🛒" },
+    ENTERTAINMENT: { name: "Entertainment", emoji: "📺" },
+    BILLS: { name: "Bills & Utilities", emoji: "📄" },
+    HEALTH: { name: "Health", emoji: "💊" },
+    TRAVEL: { name: "Travel", emoji: "✈️" },
+    OTHER: { name: "Other", emoji: "📦" },
+  };
+
+// Use special IP for Android Emulator loopback to localhost
+const API_URL = "http://10.0.2.2:3000/api/expenses";
+
+const getCategoryConfig = (backendCategory: string) => {
+  const normalized = backendCategory.toUpperCase();
+  const mapping: Record<string, keyof typeof CATEGORY_CONFIG> = {
+    "FOOD & DINING": "FOOD",
+    TRANSPORT: "TRANSPORT",
+    SHOPPING: "SHOPPING",
+    ENTERTAINMENT: "ENTERTAINMENT",
+    "BILLS & UTILITIES": "BILLS",
+    HEALTH: "HEALTH",
+    TRAVEL: "TRAVEL",
+    OTHER: "OTHER",
+  };
+
+  const key = mapping[normalized] || "OTHER";
+  return CATEGORY_CONFIG[key];
 };
 
-// Dummy Data
-let MOCK_EXPENSES: Expense[] = [
-  {
-    id: "1",
-    title: "Lunch with client",
-    amount: 850,
-    date: new Date(),
-    category: CATEGORIES.FOOD,
-    description: "Lunch meeting",
-    merchant: "Taj",
-  },
-  {
-    id: "2",
-    title: "Uber to office",
-    amount: 450,
-    date: new Date(),
-    category: CATEGORIES.TRANSPORT,
-    description: "Commute",
-    merchant: "Uber",
-  },
-];
-
 export const ExpenseService = {
-  getExpensesGroupedByDate: (): ExpenseGroup[] => {
-    const groups: Record<string, Expense[]> = {};
+  getExpensesGroupedByDate: async (): Promise<ExpenseGroup[]> => {
+    try {
+      const response = await fetch(API_URL);
+      const json = await response.json();
 
-    // Sort by date desc
-    const sorted = [...MOCK_EXPENSES].sort(
-      (a, b) => b.date.getTime() - a.date.getTime(),
-    );
-
-    sorted.forEach((expense) => {
-      const dateOption = { day: "numeric", month: "short" } as const;
-      const dateKey = expense.date.toLocaleDateString("en-GB", dateOption);
-
-      if (!groups[dateKey]) {
-        groups[dateKey] = [];
+      if (!json.success) {
+        throw new Error(json.error || "Failed to fetch expenses");
       }
-      groups[dateKey].push(expense);
-    });
 
-    return Object.keys(groups).map((date) => ({
-      date: `date - ${date}`,
-      data: groups[date],
-    }));
+      const expenses: Expense[] = json.expenses.map((e: any) => {
+        const config = getCategoryConfig(e.category);
+        return {
+          id: e._id,
+          title: e.description || e.original_input,
+          amount: e.amount,
+          currency: e.currency,
+          date: new Date(e.created_at),
+          category: config.name,
+          emoji: config.emoji,
+          description: e.description,
+          merchant: e.merchant,
+        };
+      });
+
+      // Group by date
+      const groups: Record<string, Expense[]> = {};
+
+      // Sort by date desc
+      const sorted = expenses.sort(
+        (a, b) => b.date.getTime() - a.date.getTime(),
+      );
+
+      sorted.forEach((expense) => {
+        const dateOption = { day: "numeric", month: "short" } as const;
+        const dateKey = expense.date.toLocaleDateString("en-GB", dateOption);
+
+        if (!groups[dateKey]) {
+          groups[dateKey] = [];
+        }
+        groups[dateKey].push(expense);
+      });
+
+      return Object.keys(groups).map((date) => ({
+        date: `date - ${date}`,
+        data: groups[date],
+      }));
+    } catch (error) {
+      console.error("Error fetching expenses:", error);
+      throw error;
+    }
   },
 
-  addExpense: async (text: string): Promise<Expense> => {
-    console.log("Adding expense from text:", text);
-    // Simulate AI Parsing delay
-    await new Promise((resolve) => setTimeout(resolve, 1500));
+  addExpense: async (text: string): Promise<Expense | null> => {
+    try {
+      const response = await fetch(API_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ input: text }),
+      });
 
-    // Mock parsing logic based on keywords
-    const lower = text.toLowerCase();
-    let amount = 0;
-    const amountMatch = text.match(/(\d+)/);
-    if (amountMatch) amount = parseInt(amountMatch[0], 10);
+      const json = await response.json();
 
-    let category = CATEGORIES.OTHER;
-    if (
-      lower.includes("food") ||
-      lower.includes("lunch") ||
-      lower.includes("dinner")
-    )
-      category = CATEGORIES.FOOD;
-    else if (
-      lower.includes("uber") ||
-      lower.includes("taxi") ||
-      lower.includes("bus")
-    )
-      category = CATEGORIES.TRANSPORT;
-    else if (lower.includes("grocery") || lower.includes("buy"))
-      category = CATEGORIES.SHOPPING;
-    else if (lower.includes("movie") || lower.includes("netflix"))
-      category = CATEGORIES.ENTERTAINMENT;
+      if (!json.success) {
+        throw new Error(json.error || "Failed to add expense");
+      }
 
-    const newExpense: Expense = {
-      id: Math.random().toString(36).substr(2, 9),
-      title: text,
-      amount: amount || 100, // Fallback if no specific amount found
-      date: new Date(),
-      category,
-      description: "Parsed from natural language",
-      merchant: "Unknown Merchant", // In real app, AI extracts this
-    };
-
-    MOCK_EXPENSES = [newExpense, ...MOCK_EXPENSES];
-    return newExpense;
+      const e = json.expense;
+      const config = getCategoryConfig(e.category);
+      return {
+        id: e._id,
+        title: e.description || e.original_input,
+        amount: e.amount,
+        currency: e.currency,
+        date: new Date(e.created_at),
+        category: config.name,
+        emoji: config.emoji,
+        description: e.description,
+        merchant: e.merchant,
+      };
+    } catch (error) {
+      console.error("Error adding expense:", error);
+      throw error;
+    }
   },
 
-  deleteExpense: async (id: string) => {
-    console.log("Deleting expense:", id);
-    await new Promise((resolve) => setTimeout(resolve, 500));
-    MOCK_EXPENSES = MOCK_EXPENSES.filter((e) => e.id !== id);
+  deleteExpense: async (id: string): Promise<void> => {
+    try {
+      const response = await fetch(`${API_URL}/${id}`, {
+        method: "DELETE",
+      });
+
+      const json = await response.json();
+
+      if (!json.success) {
+        throw new Error(json.error || "Failed to delete expense");
+      }
+    } catch (error) {
+      console.error("Error deleting expense:", error);
+      throw error;
+    }
   },
 };

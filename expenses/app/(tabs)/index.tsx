@@ -1,37 +1,25 @@
-import { ExpenseInput } from '@/components/home/ExpenseInput';
-import { ExpenseList } from '@/components/home/ExpenseList';
-import { SuccessFeedback } from '@/components/home/SuccessFeedback';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Expense, ExpenseGroup, ExpenseService } from '@/services/ExpenseService';
-import React, { useEffect, useState } from 'react';
+import { ExpenseInput } from '../../components/home/ExpenseInput';
+import { ExpenseList } from '../../components/home/ExpenseList';
+import { SuccessFeedback } from '../../components/home/SuccessFeedback';
+import { ThemedText } from '../../components/themed-text';
+import { ThemedView } from '../../components/themed-view';
+import { useExpenses } from '../../hooks/useExpenses';
+import { Expense, ExpenseService } from '@/services/ExpenseService';
+import React, { useState } from 'react';
 import { Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StyleSheet } from 'react-native-unistyles';
 
 export default function HomeScreen() {
-  const [expenseGroups, setExpenseGroups] = useState<ExpenseGroup[]>([]);
+  const { expenses, refetch } = useExpenses();
   const [lastAddedExpense, setLastAddedExpense] = useState<Expense | null>(null);
-
-  const fetchExpenses = async () => {
-    try {
-      const data = ExpenseService.getExpensesGroupedByDate();
-      setExpenseGroups(data);
-    } catch (error) {
-      Alert.alert('Error', 'Failed to fetch expenses');
-    }
-  };
-
-  useEffect(() => {
-    fetchExpenses();
-  }, []);
 
   const handleAddExpense = async (text: string) => {
     try {
       const newExpense = await ExpenseService.addExpense(text);
       if (newExpense) {
         setLastAddedExpense(newExpense);
-        await fetchExpenses();
+        await refetch();
       }
     } catch (error) {
       Alert.alert('Error', 'Failed to add expense. Please try again.');
@@ -41,10 +29,10 @@ export default function HomeScreen() {
   const handleDeleteExpense = async (id: string) => {
     try {
       await ExpenseService.deleteExpense(id);
-      await fetchExpenses();
+      await refetch();
     } catch (error) {
       Alert.alert('Error', 'Failed to delete expense');
-      throw error; // Re-throw to let ExpenseItem handle the error state
+      throw error;
     }
   };
 
@@ -66,8 +54,8 @@ export default function HomeScreen() {
         <ExpenseInput onSubmit={handleAddExpense} />
 
         <ExpenseList
-          expenses={expenseGroups}
-          onRefresh={fetchExpenses}
+          expenses={expenses}
+          onRefresh={refetch}
           onDelete={handleDeleteExpense}
         />
       </ThemedView>
