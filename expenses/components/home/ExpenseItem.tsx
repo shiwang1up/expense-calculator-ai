@@ -116,6 +116,7 @@ const styles = StyleSheet.create((theme) => ({
         flexDirection: 'row',
         alignItems: 'center',
         paddingVertical: theme.gap(1.5),
+        marginVertical:theme.gap(0.2),
         backgroundColor: theme.colors.card,
         borderRadius: 10,
         borderRightWidth: 2,
