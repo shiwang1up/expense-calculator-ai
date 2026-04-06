@@ -77,7 +77,7 @@ const styles = StyleSheet.create((theme) => ({
     marginBottom: theme.gap(3),
   },
   headerTitle: {
-    fontSize: 28,
+    fontSize: 26,
     fontWeight: 'bold',
     marginBottom: theme.gap(0.5),
   },

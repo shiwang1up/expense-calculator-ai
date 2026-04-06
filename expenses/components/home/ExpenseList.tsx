@@ -57,7 +57,7 @@ const styles = StyleSheet.create((theme) => ({
         paddingHorizontal: theme.gap(2),
         paddingVertical: theme.gap(1),
         backgroundColor: theme.colors.background,
-        borderBottomWidth: 1,
+        // borderBottomWidth: 2,
         borderBottomColor: theme.colors.hairline,
     },
     headerText: {
@@ -68,7 +68,7 @@ const styles = StyleSheet.create((theme) => ({
         letterSpacing: 0.5,
     },
     separator: {
-        height: 1,
+        // height: 1,
         backgroundColor: theme.colors.hairline,
         marginLeft: theme.gap(2) + 40 + theme.gap(2), // Indent to match text start (icon width + margins)
     },
