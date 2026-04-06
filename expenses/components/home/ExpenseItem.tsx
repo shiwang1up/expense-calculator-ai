@@ -1,7 +1,7 @@
 import { ThemedText } from '../../components/themed-text';
 import { IconSymbol } from '../../components/ui/icon-symbol';
 import { Expense } from '../../services/ExpenseService';
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { ActivityIndicator, Alert, Animated, TouchableOpacity, View } from 'react-native';
 import { Swipeable } from 'react-native-gesture-handler';
 import { StyleSheet } from 'react-native-unistyles';
@@ -36,8 +36,12 @@ const AnimatedTouchableOpacity = Animated.createAnimatedComponent(TouchableOpaci
 
 export const ExpenseItem = ({ expense, onDelete }: ExpenseItemProps) => {
     const [isDeleting, setIsDeleting] = useState(false);
+    const swipeableRef = useRef<Swipeable>(null);
 
     const handleDelete = () => {
+        // Spring the row back to closed position before showing the alert
+        swipeableRef.current?.close();
+
         Alert.alert(
             'Delete Expense',
             'Are you sure you want to delete this expense?',
@@ -86,7 +90,7 @@ export const ExpenseItem = ({ expense, onDelete }: ExpenseItemProps) => {
     };
 
     return (
-        <Swipeable renderRightActions={renderRightActions}>
+        <Swipeable ref={swipeableRef} renderRightActions={renderRightActions}>
             <View style={styles.container}>
                 <View style={styles.iconContainer}>
                     <ThemedText style={styles.emoji}>{expense.emoji}</ThemedText>

@@ -110,7 +110,7 @@ const styles = StyleSheet.create((theme) => ({
         color: theme.colors.typography,
         fontSize: 17,
         paddingRight: theme.gap(2),
-        paddingVertical: theme.gap(1.5),
+        paddingVertical: theme.gap(1.0),
     },
     button: {
         padding: 7,
